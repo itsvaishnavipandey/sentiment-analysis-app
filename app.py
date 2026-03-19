@@ -1,3 +1,6 @@
+import nltk
+nltk.download('punkt')
+nltk.download('averaged_perceptron_tagger')
 from flask import Flask, render_template, request, jsonify
 from textblob import TextBlob
 
