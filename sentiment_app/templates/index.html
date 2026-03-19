@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sentiment Analyzer</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f4f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .card {
+      background: white;
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      text-align: center;
+      width: 480px;
+    }
+    h1 { font-size: 24px; margin-bottom: 8px; }
+    p  { color: #666; margin-bottom: 24px; }
+    textarea {
+      width: 100%;
+      padding: 12px;
+      font-size: 15px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      resize: vertical;
+      min-height: 120px;
+      font-family: Arial, sans-serif;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #5C6BC0;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover { background: #3949AB; }
+    #result {
+      margin-top: 28px;
+      display: none;
+    }
+    .label {
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    .positive { color: #2e7d32; }
+    .negative { color: #c62828; }
+    .neutral  { color: #f57f17; }
+    .scores {
+      font-size: 14px;
+      color: #888;
+      margin-top: 6px;
+    }
+    .bar-container {
+      margin-top: 16px;
+      background: #eee;
+      border-radius: 8px;
+      height: 10px;
+      overflow: hidden;
+    }
+    .bar {
+      height: 100%;
+      border-radius: 8px;
+      transition: width 0.4s ease;
+    }
+    #error { color: red; margin-top: 12px; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Sentiment Analyzer</h1>
+    <p>Type any sentence or review to analyze its sentiment</p>
+
+    <textarea id="text" placeholder="e.g. The movie was absolutely fantastic!"></textarea>
+    <button onclick="analyze()">Analyze Sentiment</button>
+
+    <div id="result">
+      <div class="label" id="label"></div>
+      <div class="bar-container">
+        <div class="bar" id="bar"></div>
+      </div>
+      <div class="scores" id="scores"></div>
+    </div>
+    <div id="error"></div>
+  </div>
+
+  <script>
+    async function analyze() {
+      const text = document.getElementById("text").value;
+      const resultDiv = document.getElementById("result");
+      const errorDiv  = document.getElementById("error");
+
+      resultDiv.style.display = "none";
+      errorDiv.innerText = "";
+
+      if (!text.trim()) {
+        errorDiv.innerText = "Please enter some text first.";
+        return;
+      }
+
+      const response = await fetch("/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: text })
+      });
+
+      const data = await response.json();
+
+      const labelEl = document.getElementById("label");
+      const barEl   = document.getElementById("bar");
+      const scoresEl = document.getElementById("scores");
+
+      labelEl.className = "label " + data.sentiment.toLowerCase();
+      labelEl.innerText = data.sentiment;
+
+      const percent = Math.round((data.polarity + 1) / 2 * 100);
+      barEl.style.width   = percent + "%";
+      barEl.style.background = data.sentiment === "Positive" ? "#2e7d32"
+                             : data.sentiment === "Negative" ? "#c62828"
+                             : "#f57f17";
+
+      scoresEl.innerText = "Polarity: " + data.polarity + "  |  Subjectivity: " + data.subjectivity;
+
+      resultDiv.style.display = "block";
+    }
+  </script>
+</body>
+</html>
